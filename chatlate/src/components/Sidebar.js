@@ -36,15 +36,16 @@ function Sidebar() {
   const joinRoom = (room, isPublic = true) => {
     if (!user) return alert("Please Login!");
 
-    socket.emit("join-room", room);
+    socket.emit("join-room", room, currentRoom);
     setCurrentRoom(room);
     if (isPublic) setPrivateMemberMsg(null);
 
     dispatch(resetNotifications(room));
-    socket.off("notifications").on("notifications", (room) => {
-      dispatch(addNotifications(room));
-    });
   };
+
+  socket.off("notifications").on("notifications", (room) => {
+    if (currentRoom != room) dispatch(addNotifications(room));
+  });
 
   const getRooms = async () => {
     fetch("http://localhost:8000/rooms")

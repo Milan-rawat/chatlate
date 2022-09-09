@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useRef, useEffect } from "react";
 import { Col, Form, Row, Button } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { AppContext } from "../context/appContext";
@@ -9,6 +9,11 @@ function MessageForm() {
   const { socket, currentRoom, setMessages, messages, privateMemberMsg } =
     useContext(AppContext);
   const user = useSelector((state) => state.user);
+  const messageEndRef = useRef(null);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const getFormattedDate = () => {
     const date = new Date();
@@ -21,6 +26,10 @@ function MessageForm() {
     day = day.length > 1 ? day : "0" + day;
 
     return month + "/" + day + "/" + year;
+  };
+
+  const scrollToBottom = () => {
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const todayDate = getFormattedDate();
@@ -45,6 +54,22 @@ function MessageForm() {
   return (
     <>
       <div className="messages-output">
+        {user && !privateMemberMsg?._id && (
+          <div className="alert alert-info">
+            You are in the {currentRoom} room
+          </div>
+        )}
+        {user && privateMemberMsg?._id && (
+          <div className="alert alert-info conversation-info">
+            <div>
+              Your conversation with {privateMemberMsg.name}{" "}
+              <img
+                src={privateMemberMsg.picture}
+                className="conversation-profile-pic"
+              />
+            </div>
+          </div>
+        )}
         {!user && <div className="alert alert-danger">Please Login</div>}
         {user &&
           messages.map(({ _id: date, messagesByDate }, idx) => (
@@ -55,13 +80,39 @@ function MessageForm() {
               </p>
               {messagesByDate?.map(
                 ({ content, time, from: sender }, msgIdx) => (
-                  <div className="message" key={msgIdx}>
-                    {content}
+                  <div
+                    className={
+                      sender?.email == user?.email
+                        ? "message"
+                        : "incoming-message"
+                    }
+                    key={msgIdx}
+                  >
+                    <div className="message-inner">
+                      <div className="d-flex align-items-center mb-3">
+                        <img
+                          src={sender.picture}
+                          style={{
+                            width: 35,
+                            height: 35,
+                            objectFit: "cover",
+                            borderRadius: "50%",
+                            marginRight: 10,
+                          }}
+                        />
+                        <p className="message-sender">
+                          {sender._id == user?._id ? "You" : sender.name}
+                        </p>
+                      </div>
+                      <p className="message-content">{content}</p>
+                      <p className="message-timestamp-left">{time}</p>
+                    </div>
                   </div>
                 )
               )}
             </div>
           ))}
+        <div ref={messageEndRef} />
       </div>
       <Form onSubmit={handleSubmit}>
         <Row>
