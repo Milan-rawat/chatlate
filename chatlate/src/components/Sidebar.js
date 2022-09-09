@@ -1,10 +1,13 @@
 import React, { useContext, useEffect } from "react";
 import { Col, ListGroup, Row } from "react-bootstrap";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AppContext } from "../context/appContext";
+import { addNotifications, resetNotifications } from "../features/userSlice";
+import "./Sidebar.css";
 
 function Sidebar() {
   const user = useSelector((state) => state.user);
+  const dispatch = useDispatch();
   const {
     socket,
     setMembers,
@@ -36,6 +39,11 @@ function Sidebar() {
     socket.emit("join-room", room);
     setCurrentRoom(room);
     if (isPublic) setPrivateMemberMsg(null);
+
+    dispatch(resetNotifications(room));
+    socket.off("notifications").on("notifications", (room) => {
+      dispatch(addNotifications(room));
+    });
   };
 
   const getRooms = async () => {
@@ -43,6 +51,18 @@ function Sidebar() {
       .then((res) => res.json())
       .then((data) => setRooms(data));
   };
+
+  const orderIds = (id1, id2) => {
+    if (id1 > id2) return id1 + "-" + id2;
+    else return id2 + "-" + id1;
+  };
+
+  const handlePrivateMemberMsg = (member) => {
+    setPrivateMemberMsg(member);
+    const roomId = orderIds(user._id, member._id);
+    joinRoom(roomId, false);
+  };
+
   if (!user) {
     return <></>;
   }
@@ -61,15 +81,45 @@ function Sidebar() {
               justifyContent: "space-between",
             }}
           >
-            {room} {currentRoom !== room && <span></span>}
+            {room}{" "}
+            {currentRoom !== room && (
+              <span className="badge rounded-pill bg-primary">
+                {user.newMessages[room]}
+              </span>
+            )}
           </ListGroup.Item>
         ))}
       </ListGroup>
       <h2>Members</h2>
       <ListGroup>
         {members.map((member) => (
-          <ListGroup.Item key={member.id} style={{ cursor: "pointer" }}>
-            {member.name}
+          <ListGroup.Item
+            key={member.id}
+            style={{ cursor: "pointer" }}
+            active={privateMemberMsg?._id == member?._id}
+            onClick={() => handlePrivateMemberMsg(member)}
+            disabled={member._id === user._id}
+          >
+            <Row>
+              <Col xs={2} className="member-status">
+                <img src={member.picture} className="member-status-img" />
+                {member.status == "online" ? (
+                  <i className="fas fa-circle sidebar-online-status"></i>
+                ) : (
+                  <i className="fas fa-circle sidebar-offline-status"></i>
+                )}
+              </Col>
+              <Col xs={9}>
+                {member.name}
+                {member._id === user?._id && " (You)"}
+                {member.status == "offline" && " (Offline)"}
+              </Col>
+              <Col xs={1}>
+                <span className="badge rounded-pill bg-primary">
+                  {user.newMessages[orderIds(member._id, user._id)]}
+                </span>
+              </Col>
+            </Row>
           </ListGroup.Item>
         ))}
       </ListGroup>

@@ -14,7 +14,7 @@ function App() {
   const [currentRoom, setCurrentRoom] = useState([]);
   const [members, setMembers] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [privateMembermsg, setPrivateMembermsg] = useState({});
+  const [privateMemberMsg, setPrivateMemberMsg] = useState({});
   const [newMessages, setNewMessages] = useState([]);
   const user = useSelector((state) => state.user);
   return (
@@ -27,8 +27,8 @@ function App() {
         setMembers,
         messages,
         setMessages,
-        privateMembermsg,
-        setPrivateMembermsg,
+        privateMemberMsg,
+        setPrivateMemberMsg,
         rooms,
         setRooms,
         newMessages,
