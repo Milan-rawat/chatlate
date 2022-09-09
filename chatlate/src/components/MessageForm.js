@@ -13,7 +13,7 @@ function MessageForm() {
   const getFormattedDate = () => {
     const date = new Date();
     const year = date.getFullYear();
-    let month = (date.getMonth + 1).toString();
+    let month = (date.getMonth() + 1).toString();
 
     month = month.length > 1 ? month : "0" + month;
     let day = date.getDate().toString();
@@ -26,17 +26,17 @@ function MessageForm() {
   const todayDate = getFormattedDate();
 
   socket.off("room-messages").on("room-messages", (roomMessages) => {
-    console.log("room messages", roomMessages)
+    console.log("room messages", roomMessages);
     setMessages(roomMessages);
-});
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!message) return;
     const today = new Date();
     const minutes =
-      today.getMinutes() < 10 ? "0" + today.getMinutes() : today.getMinutes;
-    const time = today.getHours + ":" + minutes;
+      today.getMinutes() < 10 ? "0" + today.getMinutes() : today.getMinutes();
+    const time = today.getHours() + ":" + minutes;
     const roomId = currentRoom;
     socket.emit("message-room", roomId, message, user, time, todayDate);
     setMessage("");
@@ -46,6 +46,22 @@ function MessageForm() {
     <>
       <div className="messages-output">
         {!user && <div className="alert alert-danger">Please Login</div>}
+        {user &&
+          messages.map(({ _id: date, messagesByDate }, idx) => (
+            <div key={idx}>
+              {console.log("messagesByDate", messages[idx])}
+              <p className="alert alert-info text-center message-date-indicator">
+                {date}
+              </p>
+              {messagesByDate?.map(
+                ({ content, time, from: sender }, msgIdx) => (
+                  <div className="message" key={msgIdx}>
+                    {content}
+                  </div>
+                )
+              )}
+            </div>
+          ))}
       </div>
       <Form onSubmit={handleSubmit}>
         <Row>

@@ -30,7 +30,7 @@ app.get("/rooms", (req, res) => {
 const getLastMessagesFromRoom = async (room) => {
   let roomMessages = await Message.aggregate([
     { $match: { to: room } },
-    { $group: { _id: "$date", messagebyDate: { $push: "$$ROOT" } } },
+    { $group: { _id: "$date", messagesByDate: { $push: "$$ROOT" } } },
   ]);
 
   return roomMessages;
